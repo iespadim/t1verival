@@ -1,5 +1,3 @@
-import com.sun.org.apache.bcel.internal.generic.SWITCH;
-
 public class CentroDistribuicao {
     public enum SITUACAO {
         NORMAL, SOBRAVISO, EMERGENCIA
@@ -43,26 +41,31 @@ public class CentroDistribuicao {
     // chamado tanto pelos métodos que sinalizam a chegada de componentes no centro de 
     // distribuição quanto pelo método “encomendaCombustivel” que sinaliza o fornecimento 
     // de combustível para um posto.
-
-    //Quando todos os tanques estiverem com pelo menos 50% da capacidade o sistema opera
-    // em modo NORMAL e as encomendas são entregues normalmente para qualquer tipo de posto.
-    //Se o volume armazenado em qualquer um dos tanques cair abaixo de 50% o sistema passa a
-    //operar em modo SOBRAVISO. Neste modo o sistema só entrega 50% do que é solicitado
-    // pelos postos COMUNS e o total solicitado pelos ESTRATEGICOS.
+    // Quando todos os tanques estiverem com pelo menos 50% da capacidade o sistema opera
+    // em modo NORMAL
+    // Se o volume armazenado em qualquer um dos tanques cair abaixo de 50% o sistema passa a
+    // operar em modo SOBRAVISO.
     // Caso o volume em qualquer um dos tanques caia abaixo de 25%, então o sistema passa a
-    // operar em modo de EMERGÊNCIA e as encomendas dos postos COMUNS deixam de ser atendidas
-    // e as dos ESTRATÉGICOS são atendidas em 50%.
+    // operar em modo de EMERGÊNCIA
     public void defineSituacao() {
-        double percent = gettGasolina()/MAX_GASOLINA;
+        double gasolina = gettGasolina()*1.0;
+        double aditivo  = gettAditivo()*1.0;
+        double alcool   = (gettAlcool1() + gettAlcool2())*1.0;
+
+        double percentGasolina =  (gasolina / MAX_GASOLINA);
+        double percentAditivo  =  (aditivo/MAX_ADITIVO);
+        double percentAlcool   =  (alcool/MAX_ALCOOL);
+
+        double temp = percentGasolina < percentAlcool ? percentGasolina : percentAlcool;
+        double percent = percentAditivo < temp ? percentAditivo : temp;
 
         if (percent <0.25){
            this.situacao = SITUACAO.EMERGENCIA;
-        } else if (percent > 25 & percent <50){
+        } else if (percent >= 0.25 & percent <0.5){
             this.situacao = SITUACAO.SOBRAVISO;
         }else{
             this.situacao = SITUACAO.NORMAL;
         }
-
     }
 
     public SITUACAO getSituacao() {
@@ -86,11 +89,11 @@ public class CentroDistribuicao {
         return tAlcool2;
     }
 
-    //Os métodos “recebeAditivo”, “recebeGasolina” e “recebeAlcool” são usados quando
-    // o centro de distribuição recebe carga dos componentes. Todos recebem por parâme
-    //tro a quantidade do componente (aditivo, gasolina ou álcool) recebida e retornam
+    // Os métodos “recebeAditivo”, “recebeGasolina” e “recebeAlcool” são usados quando
+    // o centro de distribuição recebe carga dos componentes. Todos recebem por parâmetro
+    // a quantidade do componente (aditivo, gasolina ou álcool) recebida e retornam
     // à quantidade que puderam armazenar devido a limitação do tamanho dos tanques e 
-    //de quanto ainda tinham armazenado. Devem retornar “-1” caso a quantidade recebida
+    // de quanto ainda tinham armazenado. Devem retornar “-1” caso a quantidade recebida
     // por parâmetro seja inválida.
     public int recebeAditivo(int qtdade) {
         int result = 0;
@@ -167,8 +170,16 @@ public class CentroDistribuicao {
     //a gasolina vendida nos postos é resultado de uma mistura de 3 componentes:
     // 5% de aditivo, 25% de álcool e 70% de gasolina pura
     public int[] encomendaCombustivel(int qtdade, TIPOPOSTO tipoPosto) {
-        int[] result = new int[4];
-        
+        defineSituacao();
+
+        int[] result = new int[5];
+        int[] estoque = new int[5];
+
+        estoque[1]=gettAditivo();
+        estoque[2]=gettGasolina();
+        estoque[3]=gettAlcool1();
+        estoque[4]=gettAlcool2();
+
         double uso_alcool = (qtdade * 0.25);
         double uso_gasolinaPura = (qtdade * 0.7);
         double uso_aditivo= (qtdade * 0.05);
@@ -206,24 +217,56 @@ public class CentroDistribuicao {
         }
 
 
-
-        //Se o volume armazenado em qualquer um dos tanques cair abaixo de 50% o sistema passa a
-        //operar em modo SOBRAVISO. Neste modo o sistema só entrega 50% do que é solicitado
-        // pelos postos COMUNS e o total solicitado pelos ESTRATEGICOS.
-        // Caso o volume em qualquer um dos tanques caia abaixo de 25%, então o sistema passa a
-
-
-        //Quando todos os tanques estiverem com pelo menos 50% da capacidade o sistema opera
-        // em modo NORMAL e as encomendas são entregues normalmente para qualquer tipo de posto.
-        switch (tipoPosto){
-            case ESTRATEGICO:
-                break;
-            case COMUM:
-                break;
-            default:
-                break;
+        if (
+            //em modo de SOBRAVISO e as encomendas dos postos COMUMS são atendidas em 50%.
+                getSituacao()==SITUACAO.SOBRAVISO && tipoPosto ==TIPOPOSTO.COMUM
+        ){
+            result[0]=0;
+            result[1]=gettAditivo() - toInt(uso_aditivo/2);
+            result[2]=gettGasolina()- toInt(uso_gasolinaPura/2);
+            result[3]=gettAlcool1() - toInt(uso_alcool/4);
+            result[4]=gettAlcool2() - toInt(uso_alcool/4);
         }
 
+        if (
+            //em modo de SOBRAVISO e as encomendas dos postos COMUMS são atendidas em 50%.
+                getSituacao()==SITUACAO.SOBRAVISO && tipoPosto ==TIPOPOSTO.COMUM
+        ){
+            result[0]=0;
+            result[1]=gettAditivo() - toInt(uso_aditivo/2);
+            result[2]=gettGasolina()- toInt(uso_gasolinaPura/2);
+            result[3]=gettAlcool1() - toInt(uso_alcool/4);
+            result[4]=gettAlcool2() - toInt(uso_alcool/4);
+        }
+
+        if((getSituacao()==SITUACAO.SOBRAVISO && tipoPosto ==TIPOPOSTO.ESTRATEGICO) |
+                getSituacao()==SITUACAO.NORMAL){
+            result[0]=0;
+            result[1]=gettAditivo() - toInt(uso_aditivo);
+            result[2]=gettGasolina()- toInt(uso_gasolinaPura);
+            result[3]=gettAlcool1() - toInt(uso_alcool/2);
+            result[4]=gettAlcool2() - toInt(uso_alcool/2);
+        }
+
+        for (int i=1;i<=4;i++){
+            if (result[i] <0){
+                result[0]=-21;
+            }
+        }
+
+        //caso não haja combustível suficiente para completar a mistura, retorna-se “-21”.
+        if(result[0]==-21){
+            result[1]=estoque[1];
+            result[2]=estoque[2];
+            result[3]=estoque[3];
+            result[4]=estoque[4];
+        }else{
+            tAditivo=result[1];
+            tGasolina=result[2];
+            tAlcool1=result[3];
+            tAlcool2=result[4];
+        }
+        defineSituacao();
         return result;
     }
 
@@ -235,5 +278,16 @@ public class CentroDistribuicao {
     public int toInt(double valor){
         double calc = ((valor * 100)) / 100;
         return (int) calc;
+    }
+
+    public int[] getTanques(){
+        int[] estoque = new int[5];
+
+        estoque[1]=gettAditivo();
+        estoque[2]=gettGasolina();
+        estoque[3]=gettAlcool1();
+        estoque[4]=gettAlcool2();
+
+        return estoque;
     }
 }
