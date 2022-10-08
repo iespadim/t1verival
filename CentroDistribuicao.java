@@ -186,29 +186,29 @@ public class CentroDistribuicao {
 
         // recebido um valor inválido por parâmetro deve-se retornar “-7” na primeira posição do arranjo,
         if (qtdade <0){
+            System.out.println("-7");
             result[0]=-7;
             result[1]=gettAditivo();
             result[2]=gettGasolina();
             result[3]=gettAlcool1();
             result[4]=gettAlcool2();
+            return result;
         }
 
         // se o pedido não puder ser atendido em função da “situação” retorna-se “-14”
-        if (
-            //em modo de EMERGÊNCIA e as encomendas dos postos COMUNS deixam de ser atendidas
-              getSituacao()==SITUACAO.EMERGENCIA && tipoPosto ==TIPOPOSTO.COMUM
-        ){
+        if (getSituacao()==SITUACAO.EMERGENCIA && tipoPosto ==TIPOPOSTO.COMUM){
+            System.out.println("-14");
             result[0]=-14;
             result[1]=gettAditivo();
             result[2]=gettGasolina();
             result[3]=gettAlcool1();
             result[4]=gettAlcool2();
+            return result;
         }
 
-        if (
-            //em modo de EMERGÊNCIA e as encomendas dos postos ESTRATÉGICOS são atendidas em 50%.
-                getSituacao()==SITUACAO.EMERGENCIA && tipoPosto ==TIPOPOSTO.ESTRATEGICO
-        ){
+        //em modo de EMERGÊNCIA e as encomendas dos postos ESTRATÉGICOS são atendidas em 50%.
+        if (getSituacao()==SITUACAO.EMERGENCIA && tipoPosto ==TIPOPOSTO.ESTRATEGICO){
+            System.out.println("emergencia estrategico");
             result[0]=0;
             result[1]=gettAditivo() - toInt(uso_aditivo/2);
             result[2]=gettGasolina()- toInt(uso_gasolinaPura/2);
@@ -216,11 +216,9 @@ public class CentroDistribuicao {
             result[4]=gettAlcool2() - toInt(uso_alcool/4);
         }
 
-
-        if (
-            //em modo de SOBRAVISO e as encomendas dos postos COMUMS são atendidas em 50%.
-                getSituacao()==SITUACAO.SOBRAVISO && tipoPosto ==TIPOPOSTO.COMUM
-        ){
+        //em modo de SOBRAVISO e as encomendas dos postos COMUMS são atendidas em 50%.
+        if (getSituacao()==SITUACAO.SOBRAVISO && tipoPosto ==TIPOPOSTO.COMUM){
+            System.out.println("sobraviso comum");
             result[0]=0;
             result[1]=gettAditivo() - toInt(uso_aditivo/2);
             result[2]=gettGasolina()- toInt(uso_gasolinaPura/2);
@@ -228,17 +226,8 @@ public class CentroDistribuicao {
             result[4]=gettAlcool2() - toInt(uso_alcool/4);
         }
 
-        if (
-            //em modo de SOBRAVISO e as encomendas dos postos COMUMS são atendidas em 50%.
-                getSituacao()==SITUACAO.SOBRAVISO && tipoPosto ==TIPOPOSTO.COMUM
-        ){
-            result[0]=0;
-            result[1]=gettAditivo() - toInt(uso_aditivo/2);
-            result[2]=gettGasolina()- toInt(uso_gasolinaPura/2);
-            result[3]=gettAlcool1() - toInt(uso_alcool/4);
-            result[4]=gettAlcool2() - toInt(uso_alcool/4);
-        }
-
+        //em modo de SOBRAVISO e as encomendas dos postos ESTRATÉGICOS são atendidas em 100%.
+        //em modo de NORMAL e as encomendas de todos postos sao atentidas em 100%.
         if((getSituacao()==SITUACAO.SOBRAVISO && tipoPosto ==TIPOPOSTO.ESTRATEGICO) |
                 getSituacao()==SITUACAO.NORMAL){
             result[0]=0;
@@ -248,13 +237,15 @@ public class CentroDistribuicao {
             result[4]=gettAlcool2() - toInt(uso_alcool/2);
         }
 
+
+        //  caso não haja combustível suficiente para completar a mistura, retorna-se “-21”
         for (int i=1;i<=4;i++){
             if (result[i] <0){
                 result[0]=-21;
             }
         }
 
-        //caso não haja combustível suficiente para completar a mistura, retorna-se “-21”.
+        // se o resultado for -21, retorna o estoque atual e não o resultado esperado
         if(result[0]==-21){
             result[1]=estoque[1];
             result[2]=estoque[2];
@@ -276,7 +267,9 @@ public class CentroDistribuicao {
     }
 
     public int toInt(double valor){
+        System.out.println("toint valor "+valor);
         double calc = ((valor * 100)) / 100;
+        System.out.println((int) calc);
         return (int) calc;
     }
 
