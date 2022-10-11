@@ -23,11 +23,15 @@ public class CentroDistribuicao {
     //deve gerar uma ILLEGAL_ARGUMENT_EXCEPTION (isso vale também para quantidades iniciais
     // de álcool que devem ser iguais).
     public CentroDistribuicao(int tAditivo, int tGasolina, int tAlcool1, int tAlcool2) {
-        if (tAditivo > MAX_ADITIVO)     throw new IllegalArgumentException();
-        if (tGasolina > MAX_GASOLINA)   throw new IllegalArgumentException();
-        if (tAlcool1 != tAlcool2)       throw new IllegalArgumentException();
+        if (tAditivo <0 || tGasolina <0 || tAlcool1 <0 || tAlcool2 <0) {
+            throw new IllegalArgumentException("Quantidade de combustível inválida");
+        }
+
+        if (tAditivo > MAX_ADITIVO)     throw new IllegalArgumentException("tAditivo > MAX_ADITIVO");
+        if (tGasolina > MAX_GASOLINA)   throw new IllegalArgumentException("tGasolina > MAX_GASOLINA");
+        if (tAlcool1 != tAlcool2)       throw new IllegalArgumentException("tAlcool1 != tAlcool2");
         if ((tAlcool1 != tAlcool2) & (tAlcool1+tAlcool2 >MAX_ALCOOL))
-                                        throw new IllegalArgumentException();
+                                        throw new IllegalArgumentException("(tAlcool1 != tAlcool2) & (tAlcool1+tAlcool2 >MAX_ALCOOL)");
 
         this.tAditivo = tAditivo;
         this.tGasolina = tGasolina;
@@ -267,9 +271,9 @@ public class CentroDistribuicao {
     }
 
     public int toInt(double valor){
-        System.out.println("toint valor "+valor);
+        //System.out.println("toint valor "+valor);
         double calc = ((valor * 100)) / 100;
-        System.out.println((int) calc);
+        //System.out.println((int) calc);
         return (int) calc;
     }
 
